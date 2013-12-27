@@ -4,29 +4,13 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.TranslateAnimation;
 import android.widget.ScrollView;
 
-/**
-版权所有：版权所有(C)2013，固派软件
-文件名称：com.goopai.shenma.custom.ReboundScrollView.java
-系统编号：
-系统名称：Shenma
-模块编号：
-模块名称：
-设计文档：
-创建日期：2013-12-24 下午5:33:23
-作 者：何鹏程
-Version: 1.0
-内容摘要：
-类中的代码包括三个区段：类变量区、类属性区、类方法区。
-文件调用:
- */
-/**
- * ScrollView反弹效果的实现
- */
 public class ReboundScrollView extends ScrollView {
 	private View inner;// 孩子View
 
@@ -35,11 +19,35 @@ public class ReboundScrollView extends ScrollView {
 	private Rect normal = new Rect();// 矩形(这里只是个形式，只是用于判断是否需要动画.)
 
 	private boolean isCount = false;// 是否开始计算
-
+    /////////////////用于处理scrollview中嵌入viewpager横滑受影响的问题///////////////
+	private boolean canScroll;
+	 
+	 private GestureDetector mGestureDetector;
+	    View.OnTouchListener mGestureListener;
+	    
 	public ReboundScrollView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		  mGestureDetector = new GestureDetector(new YScrollDetector());
+	        canScroll = true;
 	}
-
+	@Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if(ev.getAction() == MotionEvent.ACTION_UP)
+            canScroll = true;
+        return super.onInterceptTouchEvent(ev) && mGestureDetector.onTouchEvent(ev);
+    }
+	class YScrollDetector extends SimpleOnGestureListener {
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if(canScroll)
+                if (Math.abs(distanceY) >= Math.abs(distanceX))
+                    canScroll = true;
+                else
+                    canScroll = false;
+            return canScroll;
+        }
+    }
+	/////////////////////////////////////////////////////////
 	/***
 	 * 根据 XML 生成视图工作完成.该函数在生成视图的最后调用，在所有子视图添加完之后. 即使子类覆盖了 onFinishInflate
 	 * 方法，也应该调用父类的方法，使该方法得以执行.
@@ -159,4 +167,3 @@ public class ReboundScrollView extends ScrollView {
 	}
 
 }
-
